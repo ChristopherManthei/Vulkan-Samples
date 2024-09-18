@@ -31,13 +31,13 @@ SummarizedTimings TimingsOfType::calculateSummarizations()
 		summary.mAverage = std::accumulate(data.begin(), data.end(), 0ll) / data.size();
 		summary.mMean    = data[data.size() / 2];
 		 
-		uint64_t varianceTemp = 0;
+		float varianceTemp = 0;
 		for (auto measurement : data)
 		{
-			int64_t difference = static_cast<int64_t>(measurement) - static_cast<int64_t>(summary.mMean);
+			float difference = static_cast<float>(measurement) - static_cast<float>(summary.mMean);
 			varianceTemp += difference * difference;
 		}
-		summary.mVariance = static_cast<float>(varianceTemp) / static_cast<float>(data.size() - 1);
+		summary.mDeviation = std::sqrtf(varianceTemp / static_cast<float>(data.size() - 1));
 
 		summary.mP90 = data[data.size() * 0.9f];
 		summary.mP95 = data[data.size() * 0.95f];
@@ -66,7 +66,7 @@ nlohmann::json TimingsOfType::toJson()
 	summaryJsonObj["min"]           = summary.mMin;
 	summaryJsonObj["avg"]           = summary.mAverage;
 	summaryJsonObj["mean"]          = summary.mMean;
-	summaryJsonObj["variance"]      = summary.mVariance;
+	summaryJsonObj["variance"]      = summary.mDeviation;
 	summaryJsonObj["p90"]           = summary.mP90;
 	summaryJsonObj["p95"]           = summary.mP95;
 	summaryJsonObj["p99"]           = summary.mP99;

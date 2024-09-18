@@ -18,7 +18,7 @@ struct SummarizedTimings
 	uint64_t  mMin;
 	uint64_t  mAverage;
 	uint64_t  mMean;
-	uint64_t  mVariance;
+	uint64_t  mDeviation;
 	uint64_t  mP90;
 	uint64_t  mP95;
 	uint64_t  mP99;
