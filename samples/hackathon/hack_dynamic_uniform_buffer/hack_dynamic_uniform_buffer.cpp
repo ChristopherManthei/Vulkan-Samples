@@ -60,6 +60,35 @@ void hack_dynamic_uniform_buffer::draw(VkCommandBuffer &commandBuffer)
 	}
 }
 
+void hack_dynamic_uniform_buffer::draw_scattered(VkCommandBuffer& commandBuffer)
+{
+	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+
+	VkDeviceSize offsets[1] = { 0 };
+	vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertex_buffer->get(), offsets);
+	vkCmdBindIndexBuffer(commandBuffer, index_buffer->get_handle(), 0, VK_INDEX_TYPE_UINT32);
+
+	// Render multiple objects using different model matrices by dynamically offsetting into one uniform buffer
+	auto dim = static_cast<uint32_t>(pow(OBJECT_INSTANCES, (1.0f / 3.0f)));
+	auto fdim = static_cast<float>(dim);
+	for (uint32_t z = 0; z < dim; z++)
+	{
+		for (uint32_t y = 0; y < dim; y++)
+		{
+			for (uint32_t x = 0; x < dim; x++)
+			{
+				auto index = x * dim * dim + y * dim + z;
+				// One dynamic offset per dynamic descriptor to offset into the ubo containing all model matrices
+				uint32_t dynamic_offset = index * static_cast<uint32_t>(alignment);
+				// Bind the descriptor set for rendering a mesh using the dynamic offset
+				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_layout, 0, 1, &descriptor_set, 1, &dynamic_offset);
+
+				vkCmdDrawIndexed(commandBuffer, index_count, 1, 0, 0, 0);
+			}
+		}
+	}
+}
+
 void hack_dynamic_uniform_buffer::setup_descriptor_pool()
 {
 	// Example uses one ubo and one image sampler

@@ -32,6 +32,7 @@ public:
   virtual ~hack_dynamic_uniform_buffer();
 
   void draw(VkCommandBuffer &commandBuffer);
+  void draw_scattered(VkCommandBuffer& commandBuffer);
 
   void setup_descriptor_pool();
   void setup_descriptor_set_layout();
