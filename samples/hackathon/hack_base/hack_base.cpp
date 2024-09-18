@@ -331,10 +331,10 @@ bool hack_base::prepare(const vkb::ApplicationOptions &options)
 	generate_rotations();
 	prepare_view_uniform_buffer();
 
-    {
+	{
 		ScopedTiming _(mTimeMeasurements, MeasurementPoints::HackPrepareFunction);
-	    hack_prepare();
-    }
+		hack_prepare();
+	}
 
 	prepared = true;
 	return true;
@@ -364,7 +364,7 @@ void hack_base::render(float delta_time)
 
 	// Reset and begin our draw command buffer.
 	VkCommandBuffer &currentCommandBuffer = draw_cmd_buffers[current_buffer];
-	VkFramebuffer &currentFrameBuffer = framebuffers[current_buffer];
+	VkFramebuffer   &currentFrameBuffer   = framebuffers[current_buffer];
 	vkResetCommandBuffer(currentCommandBuffer, 0);
 	begin_command_buffer(currentCommandBuffer, currentFrameBuffer);
 
@@ -403,7 +403,7 @@ void hack_base::render(float delta_time)
 
 	mFrameNumber++;
 
-	if (mFrameNumber >= sMaxNumberOfDataPoints && mTimeMeasurements.isEnabled())
+	if (mFrameNumber >= HackConstants::MaxNumberOfDataPoints && mTimeMeasurements.isEnabled())
 	{
 		mTimeMeasurements.disable();
 		mTimeMeasurements.writeToJsonFile();
