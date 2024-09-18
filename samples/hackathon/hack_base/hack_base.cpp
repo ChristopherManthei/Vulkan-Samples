@@ -392,8 +392,6 @@ bool hack_base::prepare(const vkb::ApplicationOptions &options)
 
 void hack_base::render(float delta_time)
 {
-	ScopedTiming _(mTimeMeasurements, MeasurementPoints::FullDrawCall);
-
 	// Early out if init failed.
 	if (!prepared)
 	{
@@ -403,48 +401,54 @@ void hack_base::render(float delta_time)
 	// Frame tick
 	update_rotation(delta_time);
 
-	// Sample prepare thingy
 	{
-		ScopedTiming _(mTimeMeasurements, MeasurementPoints::PrepareFrame);
-		ApiVulkanSample::prepare_frame();
-	}
+		ScopedTiming _(mTimeMeasurements, MeasurementPoints::FullDrawCall);
 
-	// Reset and begin our draw command buffer.
-	VkCommandBuffer &currentCommandBuffer = draw_cmd_buffers[current_buffer];
-	VkFramebuffer   &currentFrameBuffer   = framebuffers[current_buffer];
-	vkResetCommandBuffer(currentCommandBuffer, 0);
-	begin_command_buffer(currentCommandBuffer, currentFrameBuffer);
+		// Sample prepare thingy
+		{
+			ScopedTiming _(mTimeMeasurements, MeasurementPoints::PrepareFrame);
+			ApiVulkanSample::prepare_frame();
+		}
 
-	// Render our sample
-	{
-		ScopedTiming _(mTimeMeasurements, MeasurementPoints::HackRenderFunction);
-		hack_render(currentCommandBuffer);
-	}
+		// Reset and begin our draw command buffer.
+		VkCommandBuffer &currentCommandBuffer = draw_cmd_buffers[current_buffer];
+		VkFramebuffer   &currentFrameBuffer   = framebuffers[current_buffer];
+		vkResetCommandBuffer(currentCommandBuffer, 0);
+		begin_command_buffer(currentCommandBuffer, currentFrameBuffer);
 
-	// Update camera
-	if (camera.updated)
-	{
-		update_view_uniform_buffer();
-	}
+		// Render our sample
+		{
+			ScopedTiming _(mTimeMeasurements, MeasurementPoints::HackRenderFunction);
+			hack_render(currentCommandBuffer);
+		}
 
-	// End the draw command buffer
-	end_command_buffer(currentCommandBuffer);
+		// Update camera
+		if (camera.updated)
+		{
+			update_view_uniform_buffer();
+		}
 
-	// Submit to queue
-	{
-		ScopedTiming _(mTimeMeasurements, MeasurementPoints::QueueVkQueueSubmitOperation);
-		submit_info.commandBufferCount = 1;
-		submit_info.pCommandBuffers = &currentCommandBuffer;
-		VK_CHECK(vkQueueSubmit(queue, 1, &submit_info, VK_NULL_HANDLE));
-	}
+	    // Submit to queue
+	    {
+		    ScopedTiming _(mTimeMeasurements, MeasurementPoints::QueueVkQueueSubmitOperation);
+		    submit_info.commandBufferCount = 1;
+		    submit_info.pCommandBuffers = &currentCommandBuffer;
+            VK_CHECK(vkQueueSubmit(queue, 1, &submit_info, VK_NULL_HANDLE));
+        }
 
-	{
-		ScopedTiming _(mTimeMeasurements, MeasurementPoints::SubmitFrame);
-		ApiVulkanSample::submit_frame();
+		// Submit to queue
+		{
+			ScopedTiming _(mTimeMeasurements, MeasurementPoints::QueueVkQueueSubmitOperation);
+			VK_CHECK(vkQueueSubmit(queue, 1, &submit_info, VK_NULL_HANDLE));
+		}
+
+		{
+			ScopedTiming _(mTimeMeasurements, MeasurementPoints::SubmitFrame);
+			ApiVulkanSample::submit_frame();
+		}
 	}
 
 	mFrameNumber++;
-
 	if (mFrameNumber >= HackConstants::MaxNumberOfDataPoints && mTimeMeasurements.isEnabled())
 	{
 		retrieve_gpu_results();

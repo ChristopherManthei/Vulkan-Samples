@@ -1,8 +1,56 @@
 #include "TimeMeasurements.h"
 
+void TimingsOfType::addTiming(uint64_t value)
+{
+	// Just ignore all values that go over the measurement limit
+	if (mNextIdxToFill >= mDataPoints.size())
+		return;
+
+	mDataPointsLock.lock();
+	mDataPoints[mNextIdxToFill] = value;
+	mNextIdxToFill++;
+	mDataPointsLock.unlock();
+}
+
+SummarizedTimings TimingsOfType::calculateSummarizations()
+{
+	SummarizedTimings summary = {};
+	std::vector<uint64_t> data;
+
+	// Copy the original vector, as it is faster than sorting and summarizing, to not block the data collection to much and not alter the original data.
+	mDataPointsLock.lock();
+	data.reserve(mNextIdxToFill);
+	std::copy(mDataPoints.begin(), mDataPoints.begin() + mNextIdxToFill, std::back_inserter(data));
+	mDataPointsLock.unlock();
+
+	std::sort(data.begin(), data.end());
+
+	if (data.size() >= 1)
+	{
+		summary.mMin     = data[0];
+		summary.mAverage = std::accumulate(data.begin(), data.end(), 0ll) / data.size();
+		summary.mMean    = data[data.size() / 2];
+		 
+		uint64_t varianceTemp = 0;
+		for (auto measurement : data)
+		{
+			int64_t difference = static_cast<int64_t>(measurement) - static_cast<int64_t>(summary.mMean);
+			varianceTemp += difference * difference;
+		}
+		summary.mVariance = static_cast<float>(varianceTemp) / static_cast<float>(data.size() - 1);
+
+		summary.mP90 = data[data.size() * 0.9f];
+		summary.mP95 = data[data.size() * 0.95f];
+		summary.mP99 = data[data.size() * 0.99f];
+		summary.mMax = data[data.size() - 1];
+	}
+
+	return summary;
+}
+
 nlohmann::json TimingsOfType::toJson()
 {
-	calculateSummarizations();
+	SummarizedTimings summary = calculateSummarizations();
 
 	nlohmann::json timingsOfTypeJsonObj;
 	timingsOfTypeJsonObj["DataPointsCount"] = mNextIdxToFill;
@@ -15,14 +63,14 @@ nlohmann::json TimingsOfType::toJson()
 	timingsOfTypeJsonObj["DataPoints"] = dataPointsJsonArray;
 
 	nlohmann::json summaryJsonObj;
-	summaryJsonObj["min"]           = mSummary.mMin;
-	summaryJsonObj["avg"]           = mSummary.mAverage;
-	summaryJsonObj["mean"]          = mSummary.mMean;
-	summaryJsonObj["variance"]      = mSummary.mVariance;
-	summaryJsonObj["p90"]           = mSummary.mP90;
-	summaryJsonObj["p95"]           = mSummary.mP95;
-	summaryJsonObj["p99"]           = mSummary.mP99;
-	summaryJsonObj["max"]           = mSummary.mMax;
+	summaryJsonObj["min"]           = summary.mMin;
+	summaryJsonObj["avg"]           = summary.mAverage;
+	summaryJsonObj["mean"]          = summary.mMean;
+	summaryJsonObj["variance"]      = summary.mVariance;
+	summaryJsonObj["p90"]           = summary.mP90;
+	summaryJsonObj["p95"]           = summary.mP95;
+	summaryJsonObj["p99"]           = summary.mP99;
+	summaryJsonObj["max"]           = summary.mMax;
 	timingsOfTypeJsonObj["Summary"] = summaryJsonObj;
 
 	return timingsOfTypeJsonObj;

@@ -15,81 +15,33 @@
 
 struct SummarizedTimings
 {
-	long long mMin;
-	long long mAverage;
-	long long mMean;
-	long long mVariance;
-	long long mP90;
-	long long mP95;
-	long long mP99;
-	long long mMax;
+	uint64_t  mMin;
+	uint64_t  mAverage;
+	uint64_t  mMean;
+	uint64_t  mVariance;
+	uint64_t  mP90;
+	uint64_t  mP95;
+	uint64_t  mP99;
+	uint64_t  mMax;
 };
 
 struct TimingsOfType
 {
-	SummarizedTimings mSummary;
-
-	TimingsOfType() :
-	    mSummary(SummarizedTimings())
-	{}
-
-	void addTiming(long long value)
-	{
-		// Just ignore all values that go over the measurement limit
-		if (mNextIdxToFill >= mDataPoints.size())
-			return;
-
-		mDataPointsLock.lock();
-		mDataPoints[mNextIdxToFill] = value;
-		mNextIdxToFill++;
-		mDataPointsLock.unlock();
-	}
-
-	void calculateSummarizations()
-	{
-		// Copy the original vector, as it is faster than sorting and summarizing, to not block the data collection to much and not alter the original data.
-		mDataPointsLock.lock();
-		std::vector<long long> copy;
-		for (int i = 0; i < mNextIdxToFill; ++i)
-		{
-			copy.push_back(mDataPoints[i]);
-		}
-		mDataPointsLock.unlock();
-
-		std::sort(copy.begin(), copy.end());
-
-		if (copy.size() >= 1)
-		{
-			mSummary.mMin     = copy[0];
-			mSummary.mAverage = std::accumulate(copy.begin(), copy.end(), 0ll) / copy.size();
-			mSummary.mMean    = copy[copy.size() / 2];
-
-			long long varianceTemp = 0;
-			for (auto iter = copy.begin(); iter != copy.end(); iter++)
-			{
-				varianceTemp += ((*iter - mSummary.mMean) * (*iter - mSummary.mMean));
-			}
-			mSummary.mVariance = varianceTemp * (1 / copy.size());
-
-			mSummary.mP90 = copy[copy.size() * 0.9];
-			mSummary.mP95 = copy[copy.size() * 0.95];
-			mSummary.mP99 = copy[copy.size() * 0.99];
-			mSummary.mMax = copy[copy.size() - 1];
-		}
-	}
-
+  public:
+	void addTiming(uint64_t value);
+	SummarizedTimings calculateSummarizations();
 	nlohmann::json toJson();
 
   private:
 	std::mutex                                                  mDataPointsLock;
-	std::array<long long, HackConstants::MaxNumberOfDataPoints> mDataPoints;
+	std::array<uint64_t, HackConstants::MaxNumberOfDataPoints>  mDataPoints;
 	size_t                                                      mNextIdxToFill = 0;
 };
 
 class TimeMeasurements
 {
   public:
-	void addTime(MeasurementPoints label, long long value)
+	void addTime(MeasurementPoints label, uint64_t value)
 	{
 		if (!mEnabled)
 			return;
@@ -130,7 +82,7 @@ class ScopedTiming
 
 	~ScopedTiming()
 	{
-		long long duration = (std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - mStartTime)).count();
+		uint64_t duration = (std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - mStartTime)).count();
 		mSw.addTime(mLabel, duration);
 	}
 
