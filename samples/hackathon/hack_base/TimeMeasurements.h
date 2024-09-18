@@ -50,7 +50,10 @@ struct TimingsOfType
 		// Copy the original vector, as it is faster than sorting and summarizing, to not block the data collection to much and not alter the original data.
 		mDataPointsLock.lock();
 		std::vector<long long> copy;
-		std::copy(mDataPoints.begin(), mDataPoints.end(), std::back_inserter(copy));
+		for (int i = 0; i < mNextIdxToFill; ++i)
+		{
+			copy.push_back(mDataPoints[i]);
+		}
 		mDataPointsLock.unlock();
 
 		std::sort(copy.begin(), copy.end());

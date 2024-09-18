@@ -103,7 +103,7 @@ function SaveTestData()
     if (-not (Test-Path "$PSScriptRoot/TestResults/$Timestamp")) { mkdir "$PSScriptRoot/TestResults/$Timestamp" | Out-Null }
     if (-not (Test-Path "$PSScriptRoot/TestResults/$Timestamp/Android")) { mkdir "$PSScriptRoot/TestResults/$Timestamp/Android" | Out-Null }
 
-    & $PathToAdb shell "run-as com.khronos.vulkan_samples cat /data/data/com.khronos.vulkan_samples/files/data.json" > "$PSScriptRoot/TestResults/$Timestamp/Android/${SampleName}_.json"
+    & $PathToAdb shell "run-as com.khronos.vulkan_samples cat /data/data/com.khronos.vulkan_samples/files/data.json" > "$PSScriptRoot/TestResults/$Timestamp/Android/${SampleName}_data.json"
     RemoveTestDataFile
 }
 #endregion
