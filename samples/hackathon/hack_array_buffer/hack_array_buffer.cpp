@@ -107,7 +107,7 @@ void hack_array_buffer::setup_descriptor_set()
 
 	VK_CHECK(vkAllocateDescriptorSets(get_device().get_handle(), &alloc_info, &descriptor_set));
 	VkDescriptorBufferInfo view_buffer_descriptor = create_descriptor(*view_uniform_buffer.view);
-	VkDescriptorBufferInfo cube_buffer_descriptor = create_descriptor(*array_buffers.array, alignment);
+	VkDescriptorBufferInfo cube_buffer_descriptor = create_descriptor(*array_buffers.array, array_buffers.array->get_size());
 
 	std::vector<VkWriteDescriptorSet> write_descriptor_sets = {
 	    // Binding 0 : Projection/View matrix uniform buffer
