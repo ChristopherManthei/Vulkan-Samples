@@ -382,9 +382,7 @@ bool hack_base::prepare(const vkb::ApplicationOptions &options)
 	prepare_view_uniform_buffer();
 	prepare_gpu_query_pool();
 
-	{
-		hack_prepare();
-	}
+	hack_prepare();
 
 	prepared = true;
 	return true;
@@ -428,6 +426,9 @@ void hack_base::render(float delta_time)
 			update_view_uniform_buffer();
 		}
 
+		// End the draw command buffer
+		end_command_buffer(currentCommandBuffer);
+
 	    // Submit to queue
 	    {
 		    ScopedTiming _(mTimeMeasurements, MeasurementPoints::QueueVkQueueSubmitOperation);
@@ -435,12 +436,6 @@ void hack_base::render(float delta_time)
 		    submit_info.pCommandBuffers = &currentCommandBuffer;
             VK_CHECK(vkQueueSubmit(queue, 1, &submit_info, VK_NULL_HANDLE));
         }
-
-		// Submit to queue
-		{
-			ScopedTiming _(mTimeMeasurements, MeasurementPoints::QueueVkQueueSubmitOperation);
-			VK_CHECK(vkQueueSubmit(queue, 1, &submit_info, VK_NULL_HANDLE));
-		}
 
 		{
 			ScopedTiming _(mTimeMeasurements, MeasurementPoints::SubmitFrame);
