@@ -51,7 +51,7 @@ protected:
   VkPipeline            pipeline;
   VkPipelineLayout      pipeline_layout;
   VkDescriptorSet       descriptor_set[OBJECT_INSTANCES];
-  VkBufferView buffer_views[OBJECT_INSTANCES];
+  VkBufferView buffer_views[OBJECT_INSTANCES] = {};
   VkDescriptorSetLayout descriptor_set_layout;
 
   // Emulated uniform buffer might require additional padding for alignment.

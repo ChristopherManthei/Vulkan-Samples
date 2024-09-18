@@ -37,6 +37,14 @@ hack_emulated_uniform_buffer::~hack_emulated_uniform_buffer()
 
     vkDestroyPipelineLayout(get_device().get_handle(), pipeline_layout, nullptr);
     vkDestroyDescriptorSetLayout(get_device().get_handle(), descriptor_set_layout, nullptr);
+
+    for (int i = 0; i < OBJECT_INSTANCES; ++i)
+    {
+      if (buffer_views[i] != nullptr)
+      {
+        vkDestroyBufferView(get_device().get_handle(), buffer_views[i], nullptr);
+      }
+    }
   }
 }
 
