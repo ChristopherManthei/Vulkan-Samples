@@ -358,7 +358,7 @@ void hack_base::retrieve_gpu_results()
 
 	for (size_t i = 0; i < std::min((size_t)mFrameNumber,HackConstants::MaxNumberOfDataPoints); i++)
 	{
-		float gpu_frame_time = results[2 * i + 1] - results[2 * i] * gpu_nano_per_ticks;
+		float gpu_frame_time = (results[2 * i + 1] - results[2 * i]) * gpu_nano_per_ticks;
 		mTimeMeasurements.addTime(MeasurementPoints::GpuPipeline, gpu_frame_time);
 	}
 }
