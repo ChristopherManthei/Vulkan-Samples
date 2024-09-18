@@ -383,7 +383,6 @@ bool hack_base::prepare(const vkb::ApplicationOptions &options)
 	prepare_gpu_query_pool();
 
 	{
-		ScopedTiming _(mTimeMeasurements, MeasurementPoints::HackPrepareFunction);
 		hack_prepare();
 	}
 
@@ -402,10 +401,7 @@ void hack_base::render(float delta_time)
 	}
 
 	// Frame tick
-	if (!paused)
-	{
-		update_rotation(delta_time);
-	}
+	update_rotation(delta_time);
 
 	// Sample prepare thingy
 	{
@@ -434,16 +430,11 @@ void hack_base::render(float delta_time)
 	// End the draw command buffer
 	end_command_buffer(currentCommandBuffer);
 
-	// Command buffer to be submitted to the queue
-	{
-		ScopedTiming _(mTimeMeasurements, MeasurementPoints::QueueFillingOperations);
-		submit_info.commandBufferCount = 1;
-		submit_info.pCommandBuffers    = &currentCommandBuffer;
-	}
-
 	// Submit to queue
 	{
 		ScopedTiming _(mTimeMeasurements, MeasurementPoints::QueueVkQueueSubmitOperation);
+		submit_info.commandBufferCount = 1;
+		submit_info.pCommandBuffers = &currentCommandBuffer;
 		VK_CHECK(vkQueueSubmit(queue, 1, &submit_info, VK_NULL_HANDLE));
 	}
 
