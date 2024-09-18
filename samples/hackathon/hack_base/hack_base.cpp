@@ -340,7 +340,7 @@ void hack_base::prepare_gpu_query_pool()
 		throw std::runtime_error("Timestamps not supported by hardware.");
 	}
 
-	gpu_pool_size = 2 * HackConstants::MaxNumberOfDataPoints;
+	gpu_pool_size      = 2 * HackConstants::TotalMeasurementFrames;
 	gpu_nano_per_ticks = get_device().get_gpu().get_properties().limits.timestampPeriod;
 
 	VkQueryPoolCreateInfo pool_create_info = {};
@@ -356,7 +356,7 @@ void hack_base::retrieve_gpu_results()
 	std::vector<uint64_t> results(gpu_pool_size);
 	vkGetQueryPoolResults(get_device().get_handle(), gpu_query_pool, 0, gpu_pool_size, results.size() * sizeof(uint64_t), results.data(), sizeof(uint64_t), VK_QUERY_RESULT_WAIT_BIT);
 
-	for (size_t i = 0; i < std::min((size_t)mFrameNumber,HackConstants::MaxNumberOfDataPoints); i++)
+	for (size_t i = 0; i < std::min(static_cast<size_t>(mFrameNumber), HackConstants::TotalMeasurementFrames); i++)
 	{
 		float gpu_frame_time = (results[2 * i + 1] - results[2 * i]) * gpu_nano_per_ticks;
 		mTimeMeasurements.addTime(MeasurementPoints::GpuPipeline, gpu_frame_time);
@@ -444,7 +444,7 @@ void hack_base::render(float delta_time)
 	}
 
 	mFrameNumber++;
-	if (mFrameNumber >= HackConstants::MaxNumberOfDataPoints && mTimeMeasurements.isEnabled())
+	if (mFrameNumber >= HackConstants::TotalMeasurementFrames && mTimeMeasurements.isEnabled())
 	{
 		retrieve_gpu_results();
 

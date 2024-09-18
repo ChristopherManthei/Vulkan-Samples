@@ -33,6 +33,7 @@ struct TimingsOfType
 	nlohmann::json toJson();
 
   private:
+	size_t                                                      mWarmUpCounter = 0;
 	std::mutex                                                  mDataPointsLock;
 	std::array<uint64_t, HackConstants::MaxNumberOfDataPoints>  mDataPoints;
 	size_t                                                      mNextIdxToFill = 0;

@@ -2,6 +2,13 @@
 
 void TimingsOfType::addTiming(uint64_t value)
 {
+	// Ignore any values/measurements for the initial warm up frames.
+	if (mWarmUpCounter < HackConstants::WarmUpFrames)
+	{
+		mWarmUpCounter++;
+		return;
+	}
+
 	// Just ignore all values that go over the measurement limit
 	if (mNextIdxToFill >= mDataPoints.size())
 		return;
