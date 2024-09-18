@@ -17,39 +17,24 @@
 
 #pragma once
 
-#include "hack_base.h"
+#include "../hack_dynamic_uniform_buffer/hack_dynamic_uniform_buffer.h"
 
-class hack_dynamic_uniform_buffer : public hack_base
+class hack_dynamic_uniform_buffer_gpu : public hack_dynamic_uniform_buffer
 {
 protected:
-  struct UniformBuffers
+  struct UniformBuffersGPU
   {
     std::unique_ptr<vkb::core::BufferC> dynamic;
-  } uniform_buffers;
+  } uniform_buffers_gpu;
 
 public:
-  hack_dynamic_uniform_buffer();
-  virtual ~hack_dynamic_uniform_buffer();
-
-  void draw(VkCommandBuffer &commandBuffer);
-
-  void setup_descriptor_pool();
-  void setup_descriptor_set_layout();
-  void setup_descriptor_set();
-
-  void prepare_pipelines();
-
-  void prepare_dynamic_uniform_buffer();
-  virtual void update_dynamic_uniform_buffer();
+  hack_dynamic_uniform_buffer_gpu();
+  
+  void prepare_dynamic_uniform_buffer_gpu();
+  void setup_descriptor_set_gpu();
 
   virtual void hack_prepare() override;
-  virtual void hack_render(VkCommandBuffer &commandBuffer) override;
-
-protected:
-  VkPipeline            pipeline;
-  VkPipelineLayout      pipeline_layout;
-  VkDescriptorSet       descriptor_set;
-  VkDescriptorSetLayout descriptor_set_layout;
+  virtual void hack_update(VkCommandBuffer& commandBuffer) override;
 };
 
-std::unique_ptr<vkb::VulkanSampleC> create_hack_dynamic_uniform_buffer();
+std::unique_ptr<vkb::VulkanSampleC> create_hack_dynamic_uniform_buffer_gpu();

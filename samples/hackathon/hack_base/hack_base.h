@@ -66,6 +66,8 @@ class hack_base : public ApiVulkanSample
 
 	// Replacement for `prepare` base interface
 	virtual void hack_prepare() {};
+	// Inject commands into command buffer before rendering
+	virtual void hack_update(VkCommandBuffer& commandBuffer);
 	// Replacement for `render` base interface
 	virtual void hack_render(VkCommandBuffer &commandBuffer) {};
 
