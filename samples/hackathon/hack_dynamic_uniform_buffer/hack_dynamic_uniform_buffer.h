@@ -40,7 +40,7 @@ public:
   void prepare_pipelines();
 
   void prepare_dynamic_uniform_buffer();
-  void update_dynamic_uniform_buffer();
+  virtual void update_dynamic_uniform_buffer();
 
   virtual void hack_prepare() override;
   virtual void hack_render(VkCommandBuffer &commandBuffer) override;
