@@ -303,7 +303,7 @@ void hack_base::end_command_buffer(VkCommandBuffer &commandBuffer)
 {
 	if (mTimeMeasurements.isEnabled())
 	{
-		vkCmdWriteTimestamp(commandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, gpu_query_pool, 2 * mFrameNumber + 1);
+		vkCmdWriteTimestamp(commandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, gpu_query_pool, 2 * mFrameNumber + 1);
 	}
 
 	draw_ui(commandBuffer);
