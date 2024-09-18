@@ -116,6 +116,11 @@ hack_base::~hack_base()
 	{
 		aligned_free(aligned_cubes);
 	}
+
+	if (has_device())
+	{
+		vkDestroyQueryPool(get_device().get_handle(), gpu_query_pool, nullptr);
+	}
 }
 
 void hack_base::generate_cube()
@@ -273,9 +278,19 @@ void hack_base::begin_command_buffer(VkCommandBuffer &commandBuffer, VkFramebuff
 
 	VK_CHECK(vkBeginCommandBuffer(commandBuffer, &command_buffer_begin_info));
 
+	if (mFrameNumber == 0)
+	{
+		vkCmdResetQueryPool(commandBuffer, gpu_query_pool, 0, gpu_pool_size);
+	}
+    
 	hack_update(commandBuffer);
 
 	vkCmdBeginRenderPass(commandBuffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
+
+	if (mTimeMeasurements.isEnabled())
+	{
+		vkCmdWriteTimestamp(commandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, gpu_query_pool, 2 * mFrameNumber);
+	}
 
 	VkViewport viewport = vkb::initializers::viewport(static_cast<float>(width), static_cast<float>(height), 0.0f, 1.0f);
 	vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
@@ -286,6 +301,11 @@ void hack_base::begin_command_buffer(VkCommandBuffer &commandBuffer, VkFramebuff
 
 void hack_base::end_command_buffer(VkCommandBuffer &commandBuffer)
 {
+	if (mTimeMeasurements.isEnabled())
+	{
+		vkCmdWriteTimestamp(commandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, gpu_query_pool, 2 * mFrameNumber + 1);
+	}
+
 	draw_ui(commandBuffer);
 
 	vkCmdEndRenderPass(commandBuffer);
@@ -313,6 +333,36 @@ void hack_base::update_view_uniform_buffer()
 	view_uniform_buffer.view->convert_and_update(ubo_vs);
 }
 
+void hack_base::prepare_gpu_query_pool()
+{
+	if (!get_device().get_gpu().get_properties().limits.timestampComputeAndGraphics)
+	{
+		throw std::runtime_error("Timestamps not supported by hardware.");
+	}
+
+	gpu_pool_size = 2 * HackConstants::MaxNumberOfDataPoints;
+	gpu_nano_per_ticks = get_device().get_gpu().get_properties().limits.timestampPeriod;
+
+	VkQueryPoolCreateInfo pool_create_info = {};
+	pool_create_info.sType                 = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO;
+	pool_create_info.queryType             = VkQueryType::VK_QUERY_TYPE_TIMESTAMP;
+	pool_create_info.queryCount            = gpu_pool_size;
+	
+	vkCreateQueryPool(get_device().get_handle(), &pool_create_info, nullptr, &gpu_query_pool);
+}
+
+void hack_base::retrieve_gpu_results()
+{
+	std::vector<uint64_t> results(gpu_pool_size);
+	vkGetQueryPoolResults(get_device().get_handle(), gpu_query_pool, 0, gpu_pool_size, results.size() * sizeof(uint64_t), results.data(), sizeof(uint64_t), VK_QUERY_RESULT_WAIT_BIT);
+
+	for (size_t i = 0; i < std::min((size_t)mFrameNumber,HackConstants::MaxNumberOfDataPoints); i++)
+	{
+		float gpu_frame_time = (results[2 * i + 1] - results[2 * i]) * gpu_nano_per_ticks;
+		mTimeMeasurements.addTime(MeasurementPoints::GpuPipeline, gpu_frame_time);
+	}
+}
+
 bool hack_base::prepare(const vkb::ApplicationOptions &options)
 {
 	if (!ApiVulkanSample::prepare(options))
@@ -330,6 +380,7 @@ bool hack_base::prepare(const vkb::ApplicationOptions &options)
 	generate_cube();
 	generate_rotations();
 	prepare_view_uniform_buffer();
+	prepare_gpu_query_pool();
 
 	{
 		ScopedTiming _(mTimeMeasurements, MeasurementPoints::HackPrepareFunction);
@@ -405,6 +456,8 @@ void hack_base::render(float delta_time)
 
 	if (mFrameNumber >= HackConstants::MaxNumberOfDataPoints && mTimeMeasurements.isEnabled())
 	{
+		retrieve_gpu_results();
+
 		mTimeMeasurements.disable();
 		mTimeMeasurements.writeToJsonFile();
 	}

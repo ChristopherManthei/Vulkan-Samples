@@ -59,6 +59,9 @@ class hack_base : public ApiVulkanSample
 	void prepare_view_uniform_buffer();
 	void update_view_uniform_buffer();
 
+	void prepare_gpu_query_pool();
+	void retrieve_gpu_results();
+
 	void         build_command_buffers() override{/* no op - We are dynamically building the command buffers every frame. */};
 	virtual bool prepare(const vkb::ApplicationOptions &options) override;
 	virtual void render(float delta_time) override;
@@ -102,6 +105,11 @@ class hack_base : public ApiVulkanSample
 	std::vector<VkVertexInputBindingDescription>   vertex_input_bindings;
 	std::vector<VkVertexInputAttributeDescription> vertex_input_attributes;
 	VkPipelineVertexInputStateCreateInfo           vertex_input_state;
+
+	// GPU timing
+	VkQueryPool gpu_query_pool;
+	uint32_t    gpu_pool_size;
+	float       gpu_nano_per_ticks;
 
 	// Timing utilities
 	TimeMeasurements mTimeMeasurements = TimeMeasurements();

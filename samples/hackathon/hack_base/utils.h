@@ -21,7 +21,8 @@ enum class MeasurementPoints : uint16_t
 	QueueVkQueueSubmitOperation,
 	SubmitFrame,
 	HackRenderFunction,
-	HackPrepareFunction
+	HackPrepareFunction,
+	GpuPipeline
 };
 
 struct MeasurementPointsUtils
@@ -44,6 +45,8 @@ struct MeasurementPointsUtils
 				return "HackRenderFunction";
 			case MeasurementPoints::HackPrepareFunction:
 				return "HackPrepareFunction";
+			case MeasurementPoints::GpuPipeline:
+				return "GpuPipeline";
 			default:
 				return "Unknown MeasurementPoint";
 		}
