@@ -26,7 +26,7 @@ hack_multiple_uniform_buffer_updatebuffer::hack_multiple_uniform_buffer_updatebu
 
 void hack_multiple_uniform_buffer_updatebuffer::prepare_uniform_buffer_gpu()
 {
-	prepare_aligned_cubes(sizeof(glm::mat4), nullptr);
+	prepare_aligned_models(sizeof(glm::mat4), nullptr);
 
 	// Vertex shader uniform buffer block
 	for (size_t i = 0; i < OBJECT_INSTANCES; i++)
@@ -53,7 +53,7 @@ void hack_multiple_uniform_buffer_updatebuffer::hack_update(VkCommandBuffer& com
 {
 	for (size_t i = 0; i < OBJECT_INSTANCES; i++)
 	{
-		vkCmdUpdateBuffer(commandBuffer, uniform_buffers.single[i]->get_handle(), 0, alignment, get_aligned_cube(i));
+		vkCmdUpdateBuffer(commandBuffer, uniform_buffers.single[i]->get_handle(), 0, alignment, get_aligned_model(i));
 	}
 
   // Barrier
