@@ -49,7 +49,9 @@ class hack_base : public ApiVulkanSample
 	hack_base();
 	virtual ~hack_base();
 
-	void generate_cube();
+	void generate_cube(std::vector<Vertex> &vertices, std::vector<uint32_t> &indices);
+	void generate_sphere(std::vector<Vertex> &vertices, std::vector<uint32_t> &indices);
+	void generate_model();
 	void generate_rotations();
 	void update_rotation(float delta_time);
 

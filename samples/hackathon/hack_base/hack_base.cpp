@@ -123,10 +123,10 @@ hack_base::~hack_base()
 	}
 }
 
-void hack_base::generate_cube()
+void hack_base::generate_cube(std::vector<Vertex> &vertices, std::vector<uint32_t> &indices)
 {
 	// Setup vertices indices for a colored cube
-	std::vector<Vertex> vertices = {
+	vertices = {
 	    {{-1.0f, -1.0f, 1.0f}, {1.0f, 0.0f, 0.0f}},
 	    {{1.0f, -1.0f, 1.0f}, {0.0f, 1.0f, 0.0f}},
 	    {{1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
@@ -137,7 +137,7 @@ void hack_base::generate_cube()
 	    {{-1.0f, 1.0f, -1.0f}, {0.0f, 0.0f, 0.0f}},
 	};
 
-	std::vector<uint32_t> indices = {
+	indices = {
 	    0,
 	    1,
 	    2,
@@ -175,7 +175,18 @@ void hack_base::generate_cube()
 	    7,
 	    3,
 	};
+}
 
+void hack_base::generate_sphere(std::vector<Vertex> &vertices, std::vector<uint32_t> &indices)
+{
+}
+
+void hack_base::generate_model()
+{
+	std::vector<Vertex>   vertices;
+	std::vector<uint32_t> indices;
+
+	generate_cube(vertices, indices);
 	index_count = static_cast<uint32_t>(indices.size());
 
 	auto vertex_buffer_size = vertices.size() * sizeof(Vertex);
@@ -377,7 +388,7 @@ bool hack_base::prepare(const vkb::ApplicationOptions &options)
 	// Note: Using reversed depth-buffer for increased precision, so Znear and Zfar are flipped
 	camera.set_perspective(60.0f, static_cast<float>(width) / static_cast<float>(height), 256.0f, 0.1f);
 
-	generate_cube();
+	generate_model();
 	generate_rotations();
 	prepare_view_uniform_buffer();
 	prepare_gpu_query_pool();
