@@ -50,7 +50,7 @@ void hack_push_constant::draw(VkCommandBuffer &commandBuffer)
 	// Render multiple objects using different model matrices by dynamically offsetting into one uniform buffer
 	for (size_t j = 0; j < OBJECT_INSTANCES; j++)
 	{
-		vkCmdPushConstants(commandBuffer, pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT, 0, alignment, get_aligned_cube(j));
+		vkCmdPushConstants(commandBuffer, pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT, 0, alignment, get_aligned_model(j));
 		vkCmdDrawIndexed(commandBuffer, index_count, 1, 0, 0, 0);
 	}
 }
@@ -152,7 +152,7 @@ void hack_push_constant::prepare_pipelines()
 
 void hack_push_constant::hack_prepare()
 {
-	prepare_aligned_cubes();
+	prepare_aligned_models();
 	setup_descriptor_set_layout();
 	prepare_pipelines();
 	setup_descriptor_pool();

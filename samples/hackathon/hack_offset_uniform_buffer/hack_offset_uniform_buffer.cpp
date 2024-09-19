@@ -154,7 +154,7 @@ void hack_offset_uniform_buffer::prepare_pipelines()
 void hack_offset_uniform_buffer::prepare_uniform_buffer()
 {
 	size_t buffer_size;
-	prepare_aligned_cubes(sizeof(glm::mat4), &buffer_size);
+	prepare_aligned_models(sizeof(glm::mat4), &buffer_size);
 
 	// Vertex shader uniform buffer block
 	uniform_buffers.single = std::make_unique<vkb::core::BufferC>(get_device(),
@@ -167,7 +167,7 @@ void hack_offset_uniform_buffer::prepare_uniform_buffer()
 
 void hack_offset_uniform_buffer::update_uniform_buffer()
 {
-	uniform_buffers.single->update(aligned_cubes, static_cast<size_t>(uniform_buffers.single->get_size()));
+	uniform_buffers.single->update(aligned_models, static_cast<size_t>(uniform_buffers.single->get_size()));
 	// Flush to make changes visible to the device
 	uniform_buffers.single->flush();
 }

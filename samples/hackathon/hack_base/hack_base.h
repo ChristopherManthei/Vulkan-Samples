@@ -20,6 +20,12 @@
 #include "TimeMeasurements.h"
 #include "api_vulkan_sample.h"
 
+/// 0 =   20 triangles,   12 vertices
+/// 1 =   80 triangles,   42 vertices
+/// 2 =  320 triangles,  162 vertices
+/// 3 = 1280 triangles,  642 vertices
+/// 4 = 5120 triangles, 2562 vertices
+#define SPHERE_SUBDIVIDES 3
 #define OBJECT_INSTANCES 1000
 
 class hack_base : public ApiVulkanSample
@@ -49,7 +55,10 @@ class hack_base : public ApiVulkanSample
 	hack_base();
 	virtual ~hack_base();
 
-	void generate_cube();
+	void generate_cube(std::vector<Vertex> &vertices, std::vector<uint32_t> &indices);
+	Vertex generate_new_sphere_vertex(const Vertex &vertex1, const Vertex &vertex2, float radius) const;
+	void generate_sphere(std::vector<Vertex> &vertices, std::vector<uint32_t> &indices);
+	void generate_model();
 	void generate_rotations();
 	void update_rotation(float delta_time);
 
@@ -80,17 +89,17 @@ class hack_base : public ApiVulkanSample
 	std::unique_ptr<vkb::core::BufferC> index_buffer;
 	uint32_t                            index_count = 0;
 
-	// Store random per-object rotations for the cubes
+	// Store random per-object rotations for the models
 	glm::vec3 rotations[OBJECT_INSTANCES];
 	glm::vec3 rotation_speeds[OBJECT_INSTANCES];
 	float     animation_timer = 0.0f;
 
 	// Alignment setup calls for the test cases
 	size_t alignment;
-	void  *aligned_cubes = nullptr;
+	void  *aligned_models = nullptr;
 
-	void       prepare_aligned_cubes(size_t alignment = sizeof(glm::mat4), size_t *out_buffer_size = nullptr);
-	glm::mat4 *get_aligned_cube(size_t index);
+	void       prepare_aligned_models(size_t alignment = sizeof(glm::mat4), size_t *out_buffer_size = nullptr);
+	glm::mat4 *get_aligned_model(size_t index);
 
 	// Pipeline defaults
 	VkPipelineInputAssemblyStateCreateInfo         input_assembly_state;

@@ -153,7 +153,7 @@ void hack_multiple_uniform_buffer::prepare_pipelines()
 // Prepare and initialize uniform buffer containing shader uniforms
 void hack_multiple_uniform_buffer::prepare_uniform_buffer()
 {
-	prepare_aligned_cubes(sizeof(glm::mat4), nullptr);
+	prepare_aligned_models(sizeof(glm::mat4), nullptr);
 
 	// Vertex shader uniform buffer block
 	for (size_t i = 0; i < OBJECT_INSTANCES; i++)
@@ -171,7 +171,7 @@ void hack_multiple_uniform_buffer::update_uniform_buffer()
 {
 	for (size_t i = 0; i < OBJECT_INSTANCES; i++)
 	{
-		uniform_buffers.single[i]->update(get_aligned_cube(i), static_cast<size_t>(uniform_buffers.single[i]->get_size()));
+		uniform_buffers.single[i]->update(get_aligned_model(i), static_cast<size_t>(uniform_buffers.single[i]->get_size()));
 		// Flush to make changes visible to the device
 		uniform_buffers.single[i]->flush();
 	}

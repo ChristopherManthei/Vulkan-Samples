@@ -112,9 +112,9 @@ hack_base::hack_base()
 
 hack_base::~hack_base()
 {
-	if (aligned_cubes)
+	if (aligned_models)
 	{
-		aligned_free(aligned_cubes);
+		aligned_free(aligned_models);
 	}
 
 	if (has_device())
@@ -123,10 +123,10 @@ hack_base::~hack_base()
 	}
 }
 
-void hack_base::generate_cube()
+void hack_base::generate_cube(std::vector<Vertex> &vertices, std::vector<uint32_t> &indices)
 {
 	// Setup vertices indices for a colored cube
-	std::vector<Vertex> vertices = {
+	vertices = {
 	    {{-1.0f, -1.0f, 1.0f}, {1.0f, 0.0f, 0.0f}},
 	    {{1.0f, -1.0f, 1.0f}, {0.0f, 1.0f, 0.0f}},
 	    {{1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
@@ -137,7 +137,7 @@ void hack_base::generate_cube()
 	    {{-1.0f, 1.0f, -1.0f}, {0.0f, 0.0f, 0.0f}},
 	};
 
-	std::vector<uint32_t> indices = {
+	indices = {
 	    0,
 	    1,
 	    2,
@@ -175,7 +175,150 @@ void hack_base::generate_cube()
 	    7,
 	    3,
 	};
+}
 
+hack_base::Vertex hack_base::generate_new_sphere_vertex(const Vertex &vertex1, const Vertex &vertex2, float radius) const
+{
+	// Position
+	glm::vec3 pos1(vertex1.pos[0], vertex1.pos[1], vertex1.pos[2]);
+	glm::vec3 pos2(vertex2.pos[0], vertex2.pos[1], vertex2.pos[2]);
+	glm::vec3 new_pos = glm::normalize((pos1 + pos2) / 2.0f) * radius;
+	
+	// Color
+	glm::vec3 color1(vertex1.color[0], vertex1.color[1], vertex1.color[2]);
+	glm::vec3 color2(vertex2.color[0], vertex2.color[1], vertex2.color[2]);
+	glm::vec3 new_color = (color1 + color2) / 2.0f;
+
+	return Vertex
+	{
+	    {new_pos.x, new_pos.y, new_pos.z},
+	    {new_color.x, new_color.y, new_color.z}
+	};
+}
+
+void hack_base::generate_sphere(std::vector<Vertex> &vertices, std::vector<uint32_t> &indices)
+{
+	// Helper structures for subdivision
+	struct Triangle
+	{
+		Triangle(uint32_t index1, uint32_t index2, uint32_t index3) :
+		    index1(index1), index2(index2), index3(index3) {}
+
+		uint32_t index1, index2, index3;
+	};
+
+	struct Edge
+	{
+		Edge() = default;
+		Edge(uint32_t index1, uint32_t index2) :
+		    index1(std::min(index1, index2)), index2(std::max(index1, index2)) {}
+
+		bool operator<(const Edge &rhs) const { return (index1 < rhs.index1) || (index1 == rhs.index1 && index2 < rhs.index2);}
+		bool operator==(const Edge &rhs) const { return index1 == rhs.index1 && index2 == rhs.index2; }
+
+		uint32_t index1, index2;
+
+	};
+
+	// Create icosahedron
+	float golden_ratio = (1.f + std::sqrtf(5)) / 2.f;
+	float radius = std::sqrtf(1.0f + golden_ratio * golden_ratio);
+	vertices = {
+        {{0.0f, 1.0f, golden_ratio}, {1.0f, 0.0f, 0.0f}},   // 0
+        {{0.0f, -1.0f, golden_ratio}, {0.0f, 1.0f, 0.0f}},	// 1
+        {{0.0f, 1.0f, -golden_ratio}, {1.0f, 1.0f, 0.0f}},	// 2
+        {{0.0f, -1.0f, -golden_ratio}, {0.0f, 0.0f, 1.0f}}, // 3
+        {{1.0f, golden_ratio, 0.0f}, {1.0f, 0.0f, 1.0f}},	// 4
+        {{-1.0f, golden_ratio, 0.0f}, {0.0f, 1.0f, 1.0f}},  // 5
+        {{1.0f, -golden_ratio, 0.0f}, {1.0f, 1.0f, 1.0f}},	// 6
+        {{-1.0f, -golden_ratio, 0.0f}, {0.5f, 0.0f, 0.0f}},	// 7
+        {{golden_ratio, 0.0f, 1.0f}, {0.0f, 0.5f, 0.0f}},	// 8
+        {{golden_ratio, 0.0f, -1.0f}, {0.5f, 0.5f, 0.0f}},	// 9
+        {{-golden_ratio, 0.0f, 1.0f}, {0.0f, 0.0f, 0.5f}},	// 10
+        {{-golden_ratio, 0.0f, -1.0f}, {0.5f, 0.0f, 0.5f}},	// 11
+	};
+
+	std::vector<Triangle> triangles = {
+	    {0, 10, 1},
+		{1, 8, 0},
+		{7, 3, 6},
+		{6, 1, 7},
+		{8, 6, 9},
+		{9, 4, 8},
+		{1, 6, 8},
+		{3, 11, 2},
+		{2, 9, 3},
+		{6, 3, 9},
+		{4, 2, 5},
+		{5, 0, 4},
+		{9, 2, 4},
+		{0, 8, 4},
+		{10, 5, 11},
+		{11, 7, 10},
+		{1, 10, 7},
+		{0, 5, 10},
+		{7, 11, 3},
+		{11, 5, 2},
+	};
+
+	// Subdivide
+	std::vector<Triangle> new_triangles;
+	std::map<Edge, uint32_t> new_vertices; 
+	for (size_t subdivide = 1; subdivide <= SPHERE_SUBDIVIDES; subdivide++)
+	{
+		new_triangles.clear();
+		new_vertices.clear();
+
+		for(auto& triangle : triangles)
+		{
+			// Get edges of triangle
+			std::array<std::pair<Edge, uint32_t>, 3> edges = {
+				std::make_pair(Edge(triangle.index1, triangle.index2), 0),
+				std::make_pair(Edge(triangle.index2, triangle.index3), 0),
+				std::make_pair(Edge(triangle.index3, triangle.index1), 0)};
+
+			// Split each edge in half, creating new vertex with adjusted position
+			for (auto& edge : edges)
+			{
+				if (auto existing_vertex = new_vertices.find(edge.first); existing_vertex != new_vertices.end())
+				{
+					edge.second = existing_vertex->second;
+				}
+				else
+				{
+					Vertex new_vertex = generate_new_sphere_vertex(vertices[edge.first.index1], vertices[edge.first.index2], radius);
+					edge.second = vertices.size();
+					vertices.push_back(new_vertex);
+
+					new_vertices[edge.first] = edge.second;
+				}
+			}
+
+			// Add 4 new triangles
+			new_triangles.push_back({triangle.index1, edges[0].second, edges[2].second});
+			new_triangles.push_back({edges[0].second, triangle.index2, edges[1].second});
+			new_triangles.push_back({edges[1].second, triangle.index3, edges[2].second});
+			new_triangles.push_back({edges[0].second, edges[1].second, edges[2].second});
+		}
+
+		std::swap(triangles, new_triangles);
+	}
+
+	indices.reserve(triangles.size() * 3);
+	for (auto &triangle : triangles)
+	{
+		indices.push_back(triangle.index1);
+		indices.push_back(triangle.index2);
+		indices.push_back(triangle.index3);
+	}
+}
+
+void hack_base::generate_model()
+{
+	std::vector<Vertex>   vertices;
+	std::vector<uint32_t> indices;
+
+	generate_sphere(vertices, indices);
 	index_count = static_cast<uint32_t>(indices.size());
 
 	auto vertex_buffer_size = vertices.size() * sizeof(Vertex);
@@ -238,7 +381,7 @@ void hack_base::update_rotation(float delta_time)
 				              -((fdim * offset.y) / 2.0f) + offset.y / 2.0f + fy * offset.y,
 				              -((fdim * offset.z) / 2.0f) + offset.z / 2.0f + fz * offset.z);
 
-				glm::mat4 *model_mat = get_aligned_cube(index);
+				glm::mat4 *model_mat = get_aligned_model(index);
 				*model_mat           = glm::translate(glm::mat4(1.0f), pos);
 				*model_mat           = glm::rotate(*model_mat, rotations[index].x, glm::vec3(1.0f, 1.0f, 0.0f));
 				*model_mat           = glm::rotate(*model_mat, rotations[index].y, glm::vec3(0.0f, 1.0f, 0.0f));
@@ -377,7 +520,7 @@ bool hack_base::prepare(const vkb::ApplicationOptions &options)
 	// Note: Using reversed depth-buffer for increased precision, so Znear and Zfar are flipped
 	camera.set_perspective(60.0f, static_cast<float>(width) / static_cast<float>(height), 256.0f, 0.1f);
 
-	generate_cube();
+	generate_model();
 	generate_rotations();
 	prepare_view_uniform_buffer();
 	prepare_gpu_query_pool();
@@ -460,19 +603,19 @@ bool hack_base::resize(const uint32_t width, const uint32_t height)
 	return true;
 }
 
-void hack_base::prepare_aligned_cubes(size_t alignment, size_t *out_buffer_size)
+void hack_base::prepare_aligned_models(size_t alignment, size_t *out_buffer_size)
 {
 	// In case we change the alignment
-	if (aligned_cubes)
+	if (aligned_models)
 	{
-		aligned_free(aligned_cubes);
+		aligned_free(aligned_models);
 	}
 
 	this->alignment    = alignment;
 	size_t buffer_size = OBJECT_INSTANCES * alignment;
 
-	aligned_cubes = static_cast<glm::mat4 *>(aligned_alloc(buffer_size, alignment));
-	assert(aligned_cubes);
+	aligned_models = static_cast<glm::mat4 *>(aligned_alloc(buffer_size, alignment));
+	assert(aligned_models);
 
 	if (out_buffer_size)
 	{
@@ -480,9 +623,9 @@ void hack_base::prepare_aligned_cubes(size_t alignment, size_t *out_buffer_size)
 	}
 }
 
-glm::mat4 *hack_base::get_aligned_cube(size_t index)
+glm::mat4 *hack_base::get_aligned_model(size_t index)
 {
-	return (glm::mat4 *) (((size_t) aligned_cubes + (index * alignment)));
+	return (glm::mat4 *) (((size_t) aligned_models + (index * alignment)));
 }
 
 ///
