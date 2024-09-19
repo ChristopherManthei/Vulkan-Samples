@@ -10,7 +10,7 @@ namespace HackConstants
 	constexpr size_t WarmUpFrames = 50;
 
 #ifdef _WIN32
-	constexpr size_t MaxNumberOfDataPoints = 10000;
+	constexpr size_t MaxNumberOfDataPoints = 1000;
 #else // Android produces much less frames and we should have a good idea of performance after just a fraction of the desktop frames
 	constexpr size_t MaxNumberOfDataPoints = 1000;
 #endif

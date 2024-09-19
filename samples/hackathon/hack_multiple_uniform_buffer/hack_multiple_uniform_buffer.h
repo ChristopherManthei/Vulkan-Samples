@@ -45,7 +45,7 @@ public:
   virtual void hack_prepare() override;
   virtual void hack_render(VkCommandBuffer &commandBuffer) override;
 
-private:
+protected:
   VkPipeline            pipeline;
   VkPipelineLayout      pipeline_layout;
   VkDescriptorSet       descriptor_set[OBJECT_INSTANCES];

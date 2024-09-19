@@ -23,7 +23,7 @@ add_sample(
     ID ${FOLDER_NAME}
     CATEGORY ${CATEGORY_NAME}
     AUTHOR "<<Contributor>>"
-    NAME "hack_emulated_uniform_structuredbuffer"
+    NAME ${FOLDER_NAME}
     DESCRIPTION "Sample description"
     SHADER_FILES_HLSL
         "hackathon/hlsl/emulated_uniform.structuredbuffer.vert.hlsl"
