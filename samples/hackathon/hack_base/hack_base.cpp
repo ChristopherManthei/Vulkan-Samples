@@ -183,7 +183,7 @@ hack_base::Vertex hack_base::generate_new_sphere_vertex(const Vertex &vertex1, c
 	glm::vec3 pos1(vertex1.pos[0], vertex1.pos[1], vertex1.pos[2]);
 	glm::vec3 pos2(vertex2.pos[0], vertex2.pos[1], vertex2.pos[2]);
 	glm::vec3 new_pos = glm::normalize((pos1 + pos2) / 2.0f) * radius;
-	
+
 	// Color
 	glm::vec3 color1(vertex1.color[0], vertex1.color[1], vertex1.color[2]);
 	glm::vec3 color2(vertex2.color[0], vertex2.color[1], vertex2.color[2]);
@@ -263,7 +263,7 @@ void hack_base::generate_sphere(std::vector<Vertex> &vertices, std::vector<uint3
 
 	// Subdivide
 	std::vector<Triangle> new_triangles;
-	std::map<Edge, uint32_t> new_vertices; 
+	std::map<Edge, uint32_t> new_vertices;
 	for (size_t subdivide = 1; subdivide <= SPHERE_SUBDIVIDES; subdivide++)
 	{
 		new_triangles.clear();
@@ -425,7 +425,7 @@ void hack_base::begin_command_buffer(VkCommandBuffer &commandBuffer, VkFramebuff
 	{
 		vkCmdResetQueryPool(commandBuffer, gpu_query_pool, 0, gpu_pool_size);
 	}
-	
+
 	if (mTimeMeasurements.isEnabled())
 	{
 		vkCmdWriteTimestamp(commandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, gpu_query_pool, 2 * mFrameNumber);
@@ -434,7 +434,6 @@ void hack_base::begin_command_buffer(VkCommandBuffer &commandBuffer, VkFramebuff
 	hack_update(commandBuffer);
 
 	vkCmdBeginRenderPass(commandBuffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
-
 
 	VkViewport viewport = vkb::initializers::viewport(static_cast<float>(width), static_cast<float>(height), 0.0f, 1.0f);
 	vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
@@ -491,17 +490,22 @@ void hack_base::prepare_gpu_query_pool()
 	pool_create_info.sType                 = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO;
 	pool_create_info.queryType             = VkQueryType::VK_QUERY_TYPE_TIMESTAMP;
 	pool_create_info.queryCount            = gpu_pool_size;
-	
+
 	vkCreateQueryPool(get_device().get_handle(), &pool_create_info, nullptr, &gpu_query_pool);
 }
 
 void hack_base::retrieve_gpu_results()
 {
 	std::vector<uint64_t> results(gpu_pool_size);
-	vkGetQueryPoolResults(get_device().get_handle(), gpu_query_pool, 0, gpu_pool_size, results.size() * sizeof(uint64_t), results.data(), sizeof(uint64_t), VK_QUERY_RESULT_WAIT_BIT);
+	vkGetQueryPoolResults(get_device().get_handle(), gpu_query_pool, 0, gpu_pool_size, results.size() * sizeof(uint64_t), results.data(), sizeof(uint64_t), VK_QUERY_RESULT_64_BIT | VK_QUERY_RESULT_WAIT_BIT);
 
 	for (size_t i = 0; i < std::min(static_cast<size_t>(mFrameNumber), HackConstants::TotalMeasurementFrames); i++)
 	{
+		if (results[2 * i] > results[2 * i + 1])
+		{
+			throw std::runtime_error("Timestamp difference would be negative!");
+		}
+
 		float gpu_frame_time = (results[2 * i + 1] - results[2 * i]) * gpu_nano_per_ticks;
 		mTimeMeasurements.addTime(MeasurementPoints::GpuPipeline, gpu_frame_time);
 	}
