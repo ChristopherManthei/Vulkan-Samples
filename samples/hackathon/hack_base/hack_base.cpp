@@ -179,6 +179,45 @@ void hack_base::generate_cube(std::vector<Vertex> &vertices, std::vector<uint32_
 
 void hack_base::generate_sphere(std::vector<Vertex> &vertices, std::vector<uint32_t> &indices)
 {
+	// Create icosahedron
+	float golden_ratio = (1.f + std::sqrtf(5)) / 2.f;
+	vertices           = {
+        {{0.0f, 1.0f, golden_ratio}, {1.0f, 0.0f, 0.0f}},   // 0
+        {{0.0f, -1.0f, golden_ratio}, {0.0f, 1.0f, 0.0f}},	// 1
+        {{0.0f, 1.0f, -golden_ratio}, {1.0f, 1.0f, 0.0f}},	// 2
+        {{0.0f, -1.0f, -golden_ratio}, {0.0f, 0.0f, 1.0f}}, // 3
+        {{1.0f, golden_ratio, 0.0f}, {1.0f, 0.0f, 1.0f}},	// 4
+        {{-1.0f, golden_ratio, 0.0f}, {0.0f, 1.0f, 1.0f}},  // 5
+        {{1.0f, -golden_ratio, 0.0f}, {1.0f, 1.0f, 1.0f}},	// 6
+        {{-1.0f, -golden_ratio, 0.0f}, {0.5f, 0.0f, 0.0f}},	// 7
+        {{golden_ratio, 0.0f, 1.0f}, {0.0f, 0.5f, 0.0f}},	// 8
+        {{golden_ratio, 0.0f, -1.0f}, {0.5f, 0.5f, 0.0f}},	// 9
+        {{-golden_ratio, 0.0f, 1.0f}, {0.0f, 0.0f, 0.5f}},	// 10
+        {{-golden_ratio, 0.0f, -1.0f}, {0.5f, 0.0f, 0.5f}},	// 11
+	};
+
+	indices = {
+		0, 10, 1,
+		1, 8, 0,
+		7, 3, 6,
+		6, 1, 7,
+		8, 6, 9,
+		9, 4, 8,
+		1, 6, 8,
+		3, 11, 2,
+		2, 9, 3,
+		6, 3, 9,
+		4, 2, 5,
+		5, 0, 4,
+		9, 2, 4,
+		0, 8, 4,
+		10, 5, 11,
+		11, 7, 10,
+		1, 10, 7,
+		0, 5, 10,
+		7, 11, 3,
+		11, 5, 2,
+	};
 }
 
 void hack_base::generate_model()
@@ -186,7 +225,7 @@ void hack_base::generate_model()
 	std::vector<Vertex>   vertices;
 	std::vector<uint32_t> indices;
 
-	generate_cube(vertices, indices);
+	generate_sphere(vertices, indices);
 	index_count = static_cast<uint32_t>(indices.size());
 
 	auto vertex_buffer_size = vertices.size() * sizeof(Vertex);
