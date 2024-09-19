@@ -1,5 +1,16 @@
 #include "TimeMeasurements.h"
 
+#ifdef __GLIBCXX__
+namespace std
+{
+	// GCC STL has a bug where sqrtf is not in std namespace but instead in global namespace.
+	float sqrtf(float v) throw()
+	{
+		return ::sqrtf(v);
+	}
+}
+#endif
+
 void TimingsOfType::addTiming(uint64_t value)
 {
 	// Ignore any values/measurements for the initial warm up frames.
@@ -100,16 +111,21 @@ void TimeMeasurements::writeToJsonFile()
 
 // Paths differ between windows and android
 // I have no idea whether the android path will be the same between different android devices, but this one did work at one point on a Quest 3
-#ifdef _WIN32
+#if defined(_WIN32) || defined(PLATFORM__LINUX)
 	const char *filePath = "./data.json";
-#else
+#elif defined(ANDROID)
 	const char *filePath = "/data/data/com.khronos.vulkan_samples/files/data.json";
+#else
+	#error "Unknown platform"
 #endif
 
 	std::string outJson = rootJsonObj.dump(4);        // Dump with pretty printing and a width of 4 spaces.
 
 	// That will spike our CPU hard, but as we should stop measuring afterwards it's fine.
 	FILE *outFile = std::fopen(filePath, "w");
-	std::fwrite(outJson.data(), sizeof(char), outJson.size(), outFile);
-	std::fclose(outFile);
+	if(outFile)
+	{
+		std::fwrite(outJson.data(), sizeof(char), outJson.size(), outFile);
+		std::fclose(outFile);
+	}
 }
