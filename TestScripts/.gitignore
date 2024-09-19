@@ -1,3 +1,4 @@
 # We don't want to upload each and every in-between test result
 TestResults/
+Graphs/
 .plotVenv/
