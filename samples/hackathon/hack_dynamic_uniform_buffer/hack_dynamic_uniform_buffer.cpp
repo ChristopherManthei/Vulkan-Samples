@@ -199,7 +199,7 @@ void hack_dynamic_uniform_buffer::prepare_dynamic_uniform_buffer()
 	}
 
 	size_t buffer_size;
-	prepare_aligned_cubes(dynamic_alignment, &buffer_size);
+	prepare_aligned_models(dynamic_alignment, &buffer_size);
 
 	std::cout << "minUniformBufferOffsetAlignment = " << min_ubo_alignment << std::endl;
 	std::cout << "dynamicAlignment = " << dynamic_alignment << std::endl;
@@ -216,7 +216,7 @@ void hack_dynamic_uniform_buffer::prepare_dynamic_uniform_buffer()
 
 void hack_dynamic_uniform_buffer::update_dynamic_uniform_buffer()
 {
-	uniform_buffers.dynamic->update(aligned_cubes, static_cast<size_t>(uniform_buffers.dynamic->get_size()));
+	uniform_buffers.dynamic->update(aligned_models, static_cast<size_t>(uniform_buffers.dynamic->get_size()));
 	// Flush to make changes visible to the device
 	uniform_buffers.dynamic->flush();
 }

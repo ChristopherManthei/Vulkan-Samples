@@ -80,17 +80,17 @@ class hack_base : public ApiVulkanSample
 	std::unique_ptr<vkb::core::BufferC> index_buffer;
 	uint32_t                            index_count = 0;
 
-	// Store random per-object rotations for the cubes
+	// Store random per-object rotations for the models
 	glm::vec3 rotations[OBJECT_INSTANCES];
 	glm::vec3 rotation_speeds[OBJECT_INSTANCES];
 	float     animation_timer = 0.0f;
 
 	// Alignment setup calls for the test cases
 	size_t alignment;
-	void  *aligned_cubes = nullptr;
+	void  *aligned_models = nullptr;
 
-	void       prepare_aligned_cubes(size_t alignment = sizeof(glm::mat4), size_t *out_buffer_size = nullptr);
-	glm::mat4 *get_aligned_cube(size_t index);
+	void       prepare_aligned_models(size_t alignment = sizeof(glm::mat4), size_t *out_buffer_size = nullptr);
+	glm::mat4 *get_aligned_model(size_t index);
 
 	// Pipeline defaults
 	VkPipelineInputAssemblyStateCreateInfo         input_assembly_state;

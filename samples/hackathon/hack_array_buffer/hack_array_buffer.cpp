@@ -151,7 +151,7 @@ void hack_array_buffer::prepare_pipelines()
 void hack_array_buffer::prepare_array_buffer()
 {
 	size_t buffer_size;
-	prepare_aligned_cubes(sizeof(glm::mat4), &buffer_size);
+	prepare_aligned_models(sizeof(glm::mat4), &buffer_size);
 
 	// Vertex shader uniform buffer block
 	array_buffers.array = std::make_unique<vkb::core::BufferC>(get_device(),
@@ -164,7 +164,7 @@ void hack_array_buffer::prepare_array_buffer()
 
  void hack_array_buffer::update_array_buffer()
  {
-	 array_buffers.array->update(aligned_cubes, static_cast<size_t>(array_buffers.array->get_size()));
+	 array_buffers.array->update(aligned_models, static_cast<size_t>(array_buffers.array->get_size()));
  	// Flush to make changes visible to the device
 	 array_buffers.array->flush();
  }
