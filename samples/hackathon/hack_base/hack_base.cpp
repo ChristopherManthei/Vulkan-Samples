@@ -425,15 +425,16 @@ void hack_base::begin_command_buffer(VkCommandBuffer &commandBuffer, VkFramebuff
 	{
 		vkCmdResetQueryPool(commandBuffer, gpu_query_pool, 0, gpu_pool_size);
 	}
-    
-	hack_update(commandBuffer);
-
-	vkCmdBeginRenderPass(commandBuffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
-
+	
 	if (mTimeMeasurements.isEnabled())
 	{
 		vkCmdWriteTimestamp(commandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, gpu_query_pool, 2 * mFrameNumber);
 	}
+
+	hack_update(commandBuffer);
+
+	vkCmdBeginRenderPass(commandBuffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
+
 
 	VkViewport viewport = vkb::initializers::viewport(static_cast<float>(width), static_cast<float>(height), 0.0f, 1.0f);
 	vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
@@ -444,14 +445,14 @@ void hack_base::begin_command_buffer(VkCommandBuffer &commandBuffer, VkFramebuff
 
 void hack_base::end_command_buffer(VkCommandBuffer &commandBuffer)
 {
+	draw_ui(commandBuffer);
+
+	vkCmdEndRenderPass(commandBuffer);
+
 	if (mTimeMeasurements.isEnabled())
 	{
 		vkCmdWriteTimestamp(commandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, gpu_query_pool, 2 * mFrameNumber + 1);
 	}
-
-	draw_ui(commandBuffer);
-
-	vkCmdEndRenderPass(commandBuffer);
 
 	VK_CHECK(vkEndCommandBuffer(commandBuffer));
 }

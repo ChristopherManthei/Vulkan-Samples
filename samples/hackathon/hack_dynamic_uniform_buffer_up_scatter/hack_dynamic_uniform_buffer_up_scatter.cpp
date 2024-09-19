@@ -32,7 +32,7 @@ void hack_dynamic_uniform_buffer_up_scatter::update_dynamic_uniform_buffer()
   auto dim = static_cast<uint32_t>(pow(OBJECT_INSTANCES, (1.0f / 3.0f)));
   auto fdim = static_cast<float>(dim);
 
-  const uint8_t* sourceData = reinterpret_cast<const uint8_t*>(aligned_cubes);
+  const uint8_t* sourceData = reinterpret_cast<const uint8_t*>(aligned_models);
   uint8_t* mapped_data = uniform_buffers.dynamic->map();
 
   for (uint32_t z = 0; z < dim; z++)
