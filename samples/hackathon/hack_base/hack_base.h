@@ -20,6 +20,12 @@
 #include "TimeMeasurements.h"
 #include "api_vulkan_sample.h"
 
+/// 0 =   20 triangles,   12 vertices
+/// 1 =   80 triangles,   42 vertices
+/// 2 =  320 triangles,  162 vertices
+/// 3 = 1280 triangles,  642 vertices
+/// 4 = 5120 triangles, 2562 vertices
+#define SPHERE_SUBDIVIDES 3
 #define OBJECT_INSTANCES 1000
 
 class hack_base : public ApiVulkanSample
@@ -50,6 +56,7 @@ class hack_base : public ApiVulkanSample
 	virtual ~hack_base();
 
 	void generate_cube(std::vector<Vertex> &vertices, std::vector<uint32_t> &indices);
+	Vertex generate_new_sphere_vertex(const Vertex &vertex1, const Vertex &vertex2, float radius) const;
 	void generate_sphere(std::vector<Vertex> &vertices, std::vector<uint32_t> &indices);
 	void generate_model();
 	void generate_rotations();
