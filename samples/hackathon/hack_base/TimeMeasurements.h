@@ -90,5 +90,5 @@ class ScopedTiming
   private:
 	TimeMeasurements                     &mSw;
 	MeasurementPoints                     mLabel;
-	std::chrono::steady_clock::time_point mStartTime;
+	std::chrono::high_resolution_clock::time_point mStartTime;
 };
