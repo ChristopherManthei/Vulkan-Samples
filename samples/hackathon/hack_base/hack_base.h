@@ -119,6 +119,7 @@ class hack_base : public ApiVulkanSample
 	VkQueryPool gpu_query_pool;
 	uint32_t    gpu_pool_size;
 	float       gpu_nano_per_ticks;
+	uint64_t    gpu_timestamp_valid_bits;
 
 	// Timing utilities
 	TimeMeasurements mTimeMeasurements = TimeMeasurements();

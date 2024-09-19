@@ -478,13 +478,17 @@ void hack_base::update_view_uniform_buffer()
 
 void hack_base::prepare_gpu_query_pool()
 {
-	if (!get_device().get_gpu().get_properties().limits.timestampComputeAndGraphics)
+	auto    &gpu_properties     = get_device().get_gpu().get_properties();
+	uint32_t timestampValidBits = get_device().get_suitable_graphics_queue().get_properties().timestampValidBits;
+
+	if (!gpu_properties.limits.timestampComputeAndGraphics ||timestampValidBits == 0)
 	{
 		throw std::runtime_error("Timestamps not supported by hardware.");
 	}
 
-	gpu_pool_size      = 2 * HackConstants::TotalMeasurementFrames;
-	gpu_nano_per_ticks = get_device().get_gpu().get_properties().limits.timestampPeriod;
+	gpu_pool_size			 = 2 * HackConstants::TotalMeasurementFrames;
+	gpu_nano_per_ticks       = gpu_properties.limits.timestampPeriod;
+	gpu_timestamp_valid_bits = (timestampValidBits == 64) ? UINT64_MAX : ((1ull << timestampValidBits) - 1);
 
 	VkQueryPoolCreateInfo pool_create_info = {};
 	pool_create_info.sType                 = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO;
@@ -501,12 +505,15 @@ void hack_base::retrieve_gpu_results()
 
 	for (size_t i = 0; i < std::min(static_cast<size_t>(mFrameNumber), HackConstants::TotalMeasurementFrames); i++)
 	{
-		if (results[2 * i] > results[2 * i + 1])
+		uint64_t frame_start = results[2 * i] & gpu_timestamp_valid_bits;
+		uint64_t frame_end = results[2 * i + 1] & gpu_timestamp_valid_bits;
+
+		if (frame_start > frame_end)
 		{
 			throw std::runtime_error("Timestamp difference would be negative!");
 		}
 
-		float gpu_frame_time = (results[2 * i + 1] - results[2 * i]) * gpu_nano_per_ticks;
+		float gpu_frame_time = (frame_end - frame_start) * gpu_nano_per_ticks;
 		mTimeMeasurements.addTime(MeasurementPoints::GpuPipeline, gpu_frame_time);
 	}
 }
