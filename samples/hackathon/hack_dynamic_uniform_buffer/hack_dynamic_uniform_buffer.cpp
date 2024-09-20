@@ -208,7 +208,7 @@ void hack_dynamic_uniform_buffer::prepare_dynamic_uniform_buffer()
 
 	uniform_buffers.dynamic = std::make_unique<vkb::core::BufferC>(get_device(),
 		buffer_size,
-		VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+		VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 		VMA_MEMORY_USAGE_CPU_TO_GPU);
 
 	update_dynamic_uniform_buffer();

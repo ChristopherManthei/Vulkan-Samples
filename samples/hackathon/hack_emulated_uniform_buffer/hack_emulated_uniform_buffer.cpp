@@ -124,7 +124,7 @@ void hack_emulated_uniform_buffer::setup_descriptor_set()
     VK_CHECK(vkAllocateDescriptorSets(get_device().get_handle(), &alloc_info, &descriptor_set[j]));
 
     VkWriteDescriptorSet cubeDesc = {};
-    VkDescriptorBufferInfo aaa = create_descriptor(*emulated_uniform_buffer.buffer, dynamic_alignment * OBJECT_INSTANCES, j * dynamic_alignment);
+    VkDescriptorBufferInfo cubeInfo = create_descriptor(*emulated_uniform_buffer.buffer, dynamic_alignment, j * dynamic_alignment);
 
     if (emulated_type == VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER)
     {
@@ -147,7 +147,7 @@ void hack_emulated_uniform_buffer::setup_descriptor_set()
     }
     else
     {
-      cubeDesc = vkb::initializers::write_descriptor_set(descriptor_set[j], VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, &aaa);
+      cubeDesc = vkb::initializers::write_descriptor_set(descriptor_set[j], VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, &cubeInfo);
     }
 
 

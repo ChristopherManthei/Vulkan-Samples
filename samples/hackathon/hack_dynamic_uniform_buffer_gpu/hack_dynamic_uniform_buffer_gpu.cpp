@@ -31,7 +31,7 @@ void hack_dynamic_uniform_buffer_gpu::prepare_dynamic_uniform_buffer_gpu()
 {
   uniform_buffers_gpu.dynamic = std::make_unique<vkb::core::BufferC>(get_device(),
     OBJECT_INSTANCES * alignment,
-    VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+    VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
     VMA_MEMORY_USAGE_GPU_ONLY);
 }
 
