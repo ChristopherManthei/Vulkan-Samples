@@ -1,16 +1,5 @@
 #include "TimeMeasurements.h"
 
-#ifdef __GLIBCXX__
-namespace std
-{
-	// GCC STL has a bug where sqrtf is not in std namespace but instead in global namespace.
-	float sqrtf(float v) throw()
-	{
-		return ::sqrtf(v);
-	}
-}
-#endif
-
 void TimingsOfType::addTiming(uint64_t value)
 {
 	// Ignore any values/measurements for the initial warm up frames.
