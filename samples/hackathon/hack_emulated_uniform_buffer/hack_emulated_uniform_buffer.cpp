@@ -60,7 +60,7 @@ void hack_emulated_uniform_buffer::draw(VkCommandBuffer& commandBuffer)
   for (uint32_t j = 0; j < OBJECT_INSTANCES; j++)
   {
     // One dynamic offset per dynamic descriptor to offset into the ubo containing all model matrices
-    uint32_t dynamic_offset = j * static_cast<uint32_t>(dynamic_alignment);
+    uint32_t dynamic_offset = j * static_cast<uint32_t>(alignment);
     // Bind the descriptor set for rendering a mesh using the dynamic offset
     vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_layout, 0, 1, &descriptor_set[j], 0, nullptr);
 
@@ -124,7 +124,7 @@ void hack_emulated_uniform_buffer::setup_descriptor_set()
     VK_CHECK(vkAllocateDescriptorSets(get_device().get_handle(), &alloc_info, &descriptor_set[j]));
 
     VkWriteDescriptorSet cubeDesc = {};
-    VkDescriptorBufferInfo cubeInfo = create_descriptor(*emulated_uniform_buffer.buffer, dynamic_alignment, j * dynamic_alignment);
+    VkDescriptorBufferInfo cubeInfo = create_descriptor(*emulated_uniform_buffer.buffer, alignment, j * alignment);
 
     if (emulated_type == VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER)
     {
@@ -132,8 +132,8 @@ void hack_emulated_uniform_buffer::setup_descriptor_set()
       viewCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_VIEW_CREATE_INFO;
       viewCreateInfo.buffer = emulated_uniform_buffer.buffer->get_handle();
       viewCreateInfo.format = VkFormat::VK_FORMAT_R32_SFLOAT;
-      viewCreateInfo.offset = j * dynamic_alignment;
-      viewCreateInfo.range = dynamic_alignment;
+      viewCreateInfo.offset = j * alignment;
+      viewCreateInfo.range = alignment;
 
       // Pass the actual dynamic alignment as the descriptor's size
       vkCreateBufferView(get_device().get_handle(), &viewCreateInfo, nullptr, &buffer_views[j]);
@@ -193,12 +193,13 @@ void hack_emulated_uniform_buffer::prepare_pipelines()
 // Prepare and initialize uniform buffer containing shader uniforms
 void hack_emulated_uniform_buffer::prepare_emulated_uniform_buffer()
 {
+
   // Allocate data for the dynamic uniform buffer object
   // We allocate this manually as the alignment of the offset differs between GPUs
 
   // Calculate required alignment based on minimum device offset alignment
   size_t min_ubo_alignment = static_cast<size_t>(get_device().get_gpu().get_properties().limits.minUniformBufferOffsetAlignment);
-  dynamic_alignment = sizeof(glm::mat4);
+  size_t dynamic_alignment = sizeof(glm::mat4);
   if (min_ubo_alignment > 0)
   {
     dynamic_alignment = (dynamic_alignment + min_ubo_alignment - 1) & ~(min_ubo_alignment - 1);
@@ -212,11 +213,17 @@ void hack_emulated_uniform_buffer::prepare_emulated_uniform_buffer()
 
   // Vertex shader uniform buffer block
 
+  VkBufferUsageFlags flags = (emulated_type == VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER) ? VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT : VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+
   emulated_uniform_buffer.buffer = std::make_unique<vkb::core::BufferC>(get_device(),
     buffer_size,
-    emulated_type == VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER ? VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT : VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+    flags,
     VMA_MEMORY_USAGE_CPU_TO_GPU);
 
+  if (emulated_uniform_buffer.buffer == nullptr || emulated_uniform_buffer.buffer->get_data() == nullptr)
+  {
+    throw std::runtime_error("Buffer is null.");
+  }
   update_emulated_uniform_buffer();
 }
 

@@ -53,9 +53,6 @@ protected:
   VkDescriptorSet       descriptor_set[OBJECT_INSTANCES];
   VkBufferView buffer_views[OBJECT_INSTANCES] = {};
   VkDescriptorSetLayout descriptor_set_layout;
-
-  // Emulated uniform buffer might require additional padding for alignment.
-  size_t dynamic_alignment = 0;
 };
 
 std::unique_ptr<vkb::VulkanSampleC> create_hack_emulated_uniform_buffer();

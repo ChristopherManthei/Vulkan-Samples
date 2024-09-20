@@ -43,7 +43,7 @@ void hack_dynamic_uniform_buffer_up_scatter::update_dynamic_uniform_buffer()
       {
         auto index = x * dim * dim + y * dim + z;
         auto offset = index * alignment;
-        std::copy(sourceData + offset, sourceData + offset + alignment, mapped_data + offset);
+        memcpy(mapped_data + offset, sourceData + offset, alignment);
       }
     }
   }

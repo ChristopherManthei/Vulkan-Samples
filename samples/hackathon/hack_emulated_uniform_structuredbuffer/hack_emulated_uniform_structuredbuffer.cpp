@@ -20,6 +20,7 @@
 #include "benchmark_mode/benchmark_mode.h"
 
 hack_emulated_uniform_structuredbuffer::hack_emulated_uniform_structuredbuffer()
+  : hack_emulated_uniform_buffer()
 {
   title = "Hack: Emulated uniform structured buffers";
   emulated_type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;

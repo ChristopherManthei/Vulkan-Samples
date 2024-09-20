@@ -211,6 +211,11 @@ void hack_dynamic_uniform_buffer::prepare_dynamic_uniform_buffer()
 		VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 		VMA_MEMORY_USAGE_CPU_TO_GPU);
 
+	if (uniform_buffers.dynamic == nullptr || uniform_buffers.dynamic->get_data() == nullptr)
+	{
+		throw std::runtime_error("Buffer is null.");
+	}
+
 	update_dynamic_uniform_buffer();
 }
 
