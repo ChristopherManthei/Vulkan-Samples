@@ -167,6 +167,7 @@ def selectDataToPlot(result_data: list[dict[str, Any]], graph_data: dict[str, An
     print("summary/s [0, {}]     - Show summary of row in table.".format(len(result_data) - 1))
     print("measurement/m [0, {}] - Toggle all plots and summaries for all samples in the measurement and platform combinations.".format(len(result_data) - 1))
     print("logarithmic/l        {}- Toggle logarithmic scale for active graph (currently active graph #{})".format(" "*(len(str(len(result_data) - 1))-1), graph_data["ActiveGraph"] + 1))
+    print("clear/c              {}- Clear all data from the current active graph (currently active graph #{})".format(" "*(len(str(len(result_data) - 1))-1), graph_data["ActiveGraph"] + 1))
     print("graph/g [1, 3]       {}- Switch active graph (currently active graph #{})".format(" "*(len(str(len(result_data) - 1))-1), graph_data["ActiveGraph"] + 1))
     print("save [file_name]     {}- Save current set of graphs into svg (file_name is optional, if empty saved to TestScripts/Graphs/<timestamp>.png otherwise to TestScripts/Graphs/<file_name>.png)".format(" "*(len(str(len(result_data) - 1))-1)))
     print("quit/q               {}- Quit program".format(" "*(len(str(len(result_data) - 1))-1)))
@@ -214,6 +215,11 @@ def selectDataToPlot(result_data: list[dict[str, Any]], graph_data: dict[str, An
 
         elif command.startswith("logarithmic") or command.startswith("l"):
             graph_data["LogarithmicScales"][graph_data["ActiveGraph"]] = not graph_data["LogarithmicScales"][graph_data["ActiveGraph"]]
+
+        elif command.startswith("clear") or command.startswith("c"):
+            for entry in result_data:
+                entry["Plotted"][graph_data["ActiveGraph"]] = False
+                entry["SummaryShown"][graph_data["ActiveGraph"]] = False
 
         elif command.startswith("graph") or command.startswith("g "):
             (idx, error_msg) = getNumberFromInput(command, "g", "graph", 1, 3)
@@ -267,7 +273,10 @@ def plot(data: list[dict[str, Any]], graph_data: dict[str, Any]) -> None:
     sum1 = fig.add_subplot(number_rows, number_cols, 5) # Index is the top left and is counted towards the right and
     sum2 = fig.add_subplot(number_rows, number_cols, 7) # automatically does line breaks if no further columns are available.
     plots = [plt1, plt2]
+    plot_has_entry = [False, False]
     summaries = [sum1, sum2]
+    summary_has_entry = [False, False]
+
 
     def doPlotsOrBars(data_or_summary: str):
         for i in range(0, len(plots) if data_or_summary == "Plotted" else len(summaries)):
@@ -282,6 +291,11 @@ def plot(data: list[dict[str, Any]], graph_data: dict[str, Any]) -> None:
             all_suffixes_are_equal = True
             for entry in data:
                 if entry["Plotted" if data_or_summary == "Plotted" else "SummaryShown"][i]:
+
+                    if data_or_summary == "Plotted":
+                        plot_has_entry[i] = True
+                    else:
+                        summary_has_entry[i] = True
 
                     # If we only have one measurement of one platform in a subplot we can make it a lot prettier
                     # Thus see if we change suffixes, which is the MeasurementName and Platform
@@ -317,20 +331,19 @@ def plot(data: list[dict[str, Any]], graph_data: dict[str, Any]) -> None:
                     current_idx += 1 # The bar chart needs an index as an x label, so we increment one here to have the bars in the correct order
 
             # Format and setup the legend
-            # The bbox formula is done super crudely by trial and error. It most likely won't hold up, so adjust if needed
-            if data_or_summary == "Plotted":
+            if data_or_summary == "Plotted" and plot_has_entry[i]:
                 if all_suffixes_are_equal:
-                    plots[i].legend(short_labels, bbox_to_anchor=((max_short_label_length / 38), 0., 1., 1.), loc='center')
+                    plots[i].legend(short_labels, bbox_to_anchor=(1., 0., 1., 1.), loc='center left')
                     plots[i].set_title(short_title)
                 else:
-                    plots[i].legend(long_labels, bbox_to_anchor=((max_long_label_length / 38), 0., 1., 1.), loc='center')
+                    plots[i].legend(long_labels, bbox_to_anchor=(1., 0., 1., 1.), loc='center left')
                     plots[i].set_title("Various measurements")
-            else:
+            elif summary_has_entry[i]:
                 if all_suffixes_are_equal:
-                    summaries[i].legend(plots_or_bars, short_labels, bbox_to_anchor=((max_short_label_length / 38), 0., 1., 1.), loc='center')
+                    summaries[i].legend(plots_or_bars, short_labels, bbox_to_anchor=(1., 0., 1., 1.), loc='center left')
                     summaries[i].set_title(short_title)
                 else:
-                    summaries[i].legend(plots_or_bars, long_labels, bbox_to_anchor=((max_long_label_length / 38), 0., 1., 1.), loc='center')
+                    summaries[i].legend(plots_or_bars, long_labels, bbox_to_anchor=(1., 0., 1., 1.), loc='center left')
                     summaries[i].set_title("Various measurements")
 
     doPlotsOrBars("Plotted")
