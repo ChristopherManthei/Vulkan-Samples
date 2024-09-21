@@ -13,6 +13,17 @@
 #include <string>
 #include <vector>
 
+#ifdef __GLIBCXX__
+namespace std
+{
+	// GCC STL has a bug where sqrtf is not in std namespace but instead in global namespace.
+	inline float sqrtf(float v) throw()
+	{
+		return ::sqrtf(v);
+	}
+}
+#endif
+
 struct SummarizedTimings
 {
 	uint64_t  mMin;
